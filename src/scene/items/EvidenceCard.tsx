@@ -7,7 +7,6 @@ import { useSelectionStore } from '../../state/selectionStore'
 import { useBoardStore } from '../../state/boardStore'
 import { ITEM_VISUALS, stickyColorForId } from './itemVisuals'
 import { createPaperMaterial } from './paperMaterial'
-import { Pin } from '../Pin'
 import { projectPointerToBoard } from '../../engine/picking/boardPlane'
 import { beginItemDrag } from '../../interactions/dragState'
 import { isConnectModeActive, handleItemClickForConnect } from '../../interactions/connectMode'
@@ -124,10 +123,6 @@ export function EvidenceCard({ item }: { item: EvidenceItem }) {
         >
           {item.label}
         </Text>
-      )}
-
-      {item.kind !== 'sticky-note' && (
-        <Pin position={[0, visual.height / 2 - 0.05, visual.thickness / 2 + 0.05]} />
       )}
 
       {item.metadata.clusterId && (
