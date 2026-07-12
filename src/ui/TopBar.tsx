@@ -1,7 +1,10 @@
+import { useRef } from 'react'
 import { useBoardStore } from '../state/boardStore'
+import { downloadBoard, readBoardFromFile } from '../state/serialization'
 
 /**
- * Top chrome bar: editable board/case title.
+ * Top chrome bar: editable board/case title, plus export/import for the
+ * board's JSON representation.
  *
  * Deliberately omits collaboration UI (avatars, share, notifications) —
  * this is a single-user tool with no backend, and fabricating multiplayer
@@ -10,6 +13,15 @@ import { useBoardStore } from '../state/boardStore'
 export function TopBar() {
   const title = useBoardStore((s) => s.title)
   const setTitle = useBoardStore((s) => s.setTitle)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  async function handleImportFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+    const board = await readBoardFromFile(file)
+    if (board) useBoardStore.getState().loadBoard(board)
+  }
 
   return (
     <div
@@ -46,6 +58,26 @@ export function TopBar() {
           minWidth: 120,
         }}
       />
+
+      <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
+        <button onClick={() => fileInputRef.current?.click()} title="Import a .casebook.json file" style={chipButtonStyle}>
+          Import
+        </button>
+        <button onClick={() => downloadBoard(useBoardStore.getState())} title="Export this board as JSON" style={chipButtonStyle}>
+          Export
+        </button>
+      </div>
+      <input ref={fileInputRef} type="file" accept="application/json" onChange={handleImportFile} style={{ display: 'none' }} />
     </div>
   )
+}
+
+const chipButtonStyle: React.CSSProperties = {
+  background: 'rgba(255,255,255,0.06)',
+  border: '1px solid rgba(255,255,255,0.1)',
+  borderRadius: 6,
+  color: '#eee',
+  cursor: 'pointer',
+  padding: '5px 12px',
+  fontSize: 12,
 }
