@@ -130,6 +130,13 @@ export function EvidenceCard({ item }: { item: EvidenceItem }) {
         <Pin position={[0, visual.height / 2 - 0.05, visual.thickness / 2 + 0.05]} />
       )}
 
+      {item.metadata.clusterId && (
+        <mesh position={[-visual.width / 2 + 0.14, -visual.height / 2 + 0.14, visual.thickness / 2 + 0.003]}>
+          <circleGeometry args={[0.07, 16]} />
+          <meshBasicMaterial color={clusterColor(item.metadata.clusterId)} />
+        </mesh>
+      )}
+
       {isEditing && (
         <Html center position={[0, 0, visual.thickness / 2 + 0.01]} transform distanceFactor={6} style={{ pointerEvents: 'auto' }}>
           <textarea
@@ -179,4 +186,12 @@ function hashSeed(id: string): number {
   let hash = 0
   for (let i = 0; i < id.length; i++) hash = (hash * 31 + id.charCodeAt(i)) >>> 0
   return (hash % 1000) / 100
+}
+
+/** Deterministic accent color for an AI-assigned cluster id, so all items in the same cluster read as visually grouped. */
+const CLUSTER_COLORS = ['#e0b84c', '#5cc9e8', '#8bd17c', '#e07cc9', '#e8975c']
+function clusterColor(clusterId: string): string {
+  let hash = 0
+  for (let i = 0; i < clusterId.length; i++) hash = (hash * 31 + clusterId.charCodeAt(i)) >>> 0
+  return CLUSTER_COLORS[hash % CLUSTER_COLORS.length]
 }
