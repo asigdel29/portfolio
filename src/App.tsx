@@ -1,3 +1,4 @@
+import { Analytics } from '@vercel/analytics/react'
 import { Scene } from './scene/Scene'
 import { Toolbar } from './ui/Toolbar'
 import { Inspector } from './ui/Inspector'
@@ -16,6 +17,7 @@ function App() {
       <Inspector />
       <LassoOverlay />
       <KeyboardShortcuts />
+      <Analytics />
     </div>
   )
 }
