@@ -8,6 +8,8 @@ import { PostFX } from './PostFX'
 import { ItemsLayer } from './items/ItemsLayer'
 import { RopesLayer } from './RopesLayer'
 import { DragController } from '../interactions/DragController'
+import { InstancedPins } from '../perf/InstancedPins'
+import { AdaptiveQuality } from '../perf/AdaptiveQuality'
 
 /**
  * Root 3D scene: canvas, physics world, camera rig, board, items, and lighting.
@@ -24,11 +26,13 @@ export function Scene() {
       <CameraDefinition />
       <CameraRig />
       <DragController />
+      <AdaptiveQuality />
       <Lighting />
       <Suspense fallback={null}>
         <Physics gravity={[0, -9.81, 0]} timeStep="vary">
           <Board />
           <ItemsLayer />
+          <InstancedPins />
           <RopesLayer />
         </Physics>
       </Suspense>

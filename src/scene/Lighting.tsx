@@ -1,4 +1,5 @@
 import { Environment } from '@react-three/drei'
+import { useQualityStore } from '../state/qualityStore'
 
 /**
  * Cinematic "detective's desk lamp" lighting rig.
@@ -8,8 +9,15 @@ import { Environment } from '@react-three/drei'
  * A neutral HDRI provides subtle environment reflections on glossy items
  * (photo glaze, glass-look document sleeves) without needing a bundled
  * asset — drei's `Environment` generates one procedurally via `preset`.
+ *
+ * The key light's shadow map halves in resolution under the 'low' quality
+ * tier (see `perf/AdaptiveQuality`) — shadow map rendering is a fixed cost
+ * paid every frame regardless of scene complexity, so it's a reliable lever.
  */
 export function Lighting() {
+  const tier = useQualityStore((s) => s.tier)
+  const shadowMapSize = tier === 'high' ? 2048 : 1024
+
   return (
     <>
       <ambientLight intensity={0.09} color="#3a4a62" />
@@ -22,8 +30,8 @@ export function Lighting() {
         intensity={260}
         color="#ffb374"
         castShadow
-        shadow-mapSize-width={2048}
-        shadow-mapSize-height={2048}
+        shadow-mapSize-width={shadowMapSize}
+        shadow-mapSize-height={shadowMapSize}
         shadow-bias={-0.0005}
         shadow-camera-near={5}
         shadow-camera-far={50}
