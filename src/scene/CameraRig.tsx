@@ -4,13 +4,15 @@ import { PerspectiveCamera } from '@react-three/drei'
 import * as THREE from 'three'
 import { useCameraStore, MIN_ZOOM, MAX_ZOOM } from '../state/cameraStore'
 import { beginPan, isPanning, consumePanDelta, endPan } from '../interactions/panState'
+import { consumeZoomRequest } from '../interactions/zoomState'
 import { setActiveRenderContext } from '../engine/picking/activeCamera'
 
 const BASE_DISTANCE = 48
 const FOV_DEGREES = 28
 /** Slight downward tilt so the board reads as "viewed from above a desk", per the design brief. */
 const TILT_RADIANS = 0.12
-const PAN_DAMPING = 0.14
+/** Time constant (seconds) for the pan/zoom exponential smoothing — smaller is snappier. */
+const SMOOTHING_TAU = 0.12
 const ZOOM_STEP = 0.0015
 
 /**
@@ -76,21 +78,38 @@ export function CameraRig() {
     }
   }, [gl])
 
-  useFrame(() => {
-    // Apply inertia once the pointer is released: velocity decays exponentially.
-    if (!isPanning()) {
-      const v = velocityRef.current
-      if (Math.abs(v.x) > 0.0001 || Math.abs(v.y) > 0.0001) {
-        targetRef.current = { x: targetRef.current.x + v.x, y: targetRef.current.y + v.y }
-        velocityRef.current = { x: v.x * 0.9, y: v.y * 0.9 }
+  useFrame((_state, delta) => {
+    const zoomRequest = consumeZoomRequest()
+    if (zoomRequest) {
+      if (zoomRequest.resetRequested) {
+        targetRef.current = { x: 0, y: 0 }
+        zoomRef.current = 1
+        velocityRef.current = { x: 0, y: 0 }
+      } else if (zoomRequest.factor !== null) {
+        zoomRef.current = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, zoomRef.current * zoomRequest.factor))
       }
     }
 
+    // Apply inertia once the pointer is released: velocity decays exponentially, scaled by
+    // elapsed time (not a fixed per-call factor) so behavior is consistent regardless of frame rate.
+    if (!isPanning()) {
+      const v = velocityRef.current
+      if (Math.abs(v.x) > 0.0001 || Math.abs(v.y) > 0.0001) {
+        const decay = Math.pow(0.9, delta * 60)
+        targetRef.current = { x: targetRef.current.x + v.x, y: targetRef.current.y + v.y }
+        velocityRef.current = { x: v.x * decay, y: v.y * decay }
+      }
+    }
+
+    // Exponential smoothing toward the raw pan/zoom targets, framerate-independent: the fraction
+    // covered per call is derived from elapsed time and SMOOTHING_TAU, not a fixed per-call constant
+    // (a fixed constant would make convergence speed depend on how often useFrame happens to run).
+    const smoothing = 1 - Math.exp(-delta / SMOOTHING_TAU)
     const state = useCameraStore.getState()
-    const dampedZoom = THREE.MathUtils.lerp(state.zoom, zoomRef.current, PAN_DAMPING)
+    const dampedZoom = THREE.MathUtils.lerp(state.zoom, zoomRef.current, smoothing)
     const dampedTarget = {
-      x: THREE.MathUtils.lerp(state.target.x, targetRef.current.x, PAN_DAMPING),
-      y: THREE.MathUtils.lerp(state.target.y, targetRef.current.y, PAN_DAMPING),
+      x: THREE.MathUtils.lerp(state.target.x, targetRef.current.x, smoothing),
+      y: THREE.MathUtils.lerp(state.target.y, targetRef.current.y, smoothing),
     }
     if (dampedZoom !== state.zoom) useCameraStore.setState({ zoom: dampedZoom })
     if (dampedTarget.x !== state.target.x || dampedTarget.y !== state.target.y) {
