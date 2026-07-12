@@ -6,6 +6,7 @@ import { BottomBar } from './ui/BottomBar'
 import { Inspector } from './ui/Inspector'
 import { LassoOverlay } from './ui/LassoOverlay'
 import { KeyboardShortcuts } from './interactions/KeyboardShortcuts'
+import { AutosaveController } from './state/AutosaveController'
 
 /**
  * Application root. The 3D evidence board fills the viewport; the 2D UI
@@ -21,6 +22,7 @@ function App() {
       <Inspector />
       <LassoOverlay />
       <KeyboardShortcuts />
+      <AutosaveController />
       <Analytics />
     </div>
   )

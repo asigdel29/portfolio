@@ -53,8 +53,13 @@ export function Toolbar() {
     const file = e.target.files?.[0]
     const itemId = pendingUploadItemId.current
     if (file && itemId) {
-      const url = URL.createObjectURL(file)
-      setItemImage(itemId, url)
+      // A data URL (not `URL.createObjectURL`) so the image survives JSON export and
+      // localStorage autosave — object URLs are only valid for the current page session.
+      const reader = new FileReader()
+      reader.onload = () => {
+        if (typeof reader.result === 'string') setItemImage(itemId, reader.result)
+      }
+      reader.readAsDataURL(file)
     }
     pendingUploadItemId.current = null
     e.target.value = ''
