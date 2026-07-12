@@ -30,6 +30,8 @@ export interface BoardActions {
   setItemLabel: (id: string, label: string) => void
   setItemText: (id: string, text: string) => void
   setItemImage: (id: string, imageUrl: string) => void
+  addItemTag: (id: string, tag: string) => void
+  removeItemTag: (id: string, tag: string) => void
 
   addRope: (fromItemId: string, toItemId: string, material?: RopeConnection['material']) => string
   removeRope: (id: string) => void
@@ -175,6 +177,31 @@ export const useBoardStore = create<BoardStore>()(
           const existing = s.items[id]
           if (!existing) return s
           return { items: { ...s.items, [id]: { ...existing, imageUrl } } }
+        })
+      },
+
+      addItemTag: (id, tag) => {
+        const trimmed = tag.trim()
+        if (!trimmed) return
+        set((s) => {
+          const existing = s.items[id]
+          if (!existing || existing.metadata.labels.includes(trimmed)) return s
+          return {
+            items: { ...s.items, [id]: { ...existing, metadata: { ...existing.metadata, labels: [...existing.metadata.labels, trimmed] } } },
+          }
+        })
+      },
+
+      removeItemTag: (id, tag) => {
+        set((s) => {
+          const existing = s.items[id]
+          if (!existing) return s
+          return {
+            items: {
+              ...s.items,
+              [id]: { ...existing, metadata: { ...existing.metadata, labels: existing.metadata.labels.filter((t) => t !== tag) } },
+            },
+          }
         })
       },
 
