@@ -32,6 +32,10 @@ export interface BoardActions {
   setItemImage: (id: string, imageUrl: string) => void
   addItemTag: (id: string, tag: string) => void
   removeItemTag: (id: string, tag: string) => void
+  setItemCluster: (id: string, clusterId: string | null) => void
+  addItemHypothesis: (id: string, hypothesis: string) => void
+  removeItemHypothesis: (id: string, hypothesis: string) => void
+  setItemTimelineSlot: (id: string, timelineSlot: string | null) => void
 
   addRope: (fromItemId: string, toItemId: string, material?: RopeConnection['material']) => string
   removeRope: (id: string) => void
@@ -202,6 +206,47 @@ export const useBoardStore = create<BoardStore>()(
               [id]: { ...existing, metadata: { ...existing.metadata, labels: existing.metadata.labels.filter((t) => t !== tag) } },
             },
           }
+        })
+      },
+
+      setItemCluster: (id, clusterId) => {
+        set((s) => {
+          const existing = s.items[id]
+          if (!existing) return s
+          return { items: { ...s.items, [id]: { ...existing, metadata: { ...existing.metadata, clusterId } } } }
+        })
+      },
+
+      addItemHypothesis: (id, hypothesis) => {
+        const trimmed = hypothesis.trim()
+        if (!trimmed) return
+        set((s) => {
+          const existing = s.items[id]
+          if (!existing) return s
+          return {
+            items: { ...s.items, [id]: { ...existing, metadata: { ...existing.metadata, hypotheses: [...existing.metadata.hypotheses, trimmed] } } },
+          }
+        })
+      },
+
+      removeItemHypothesis: (id, hypothesis) => {
+        set((s) => {
+          const existing = s.items[id]
+          if (!existing) return s
+          return {
+            items: {
+              ...s.items,
+              [id]: { ...existing, metadata: { ...existing.metadata, hypotheses: existing.metadata.hypotheses.filter((h) => h !== hypothesis) } },
+            },
+          }
+        })
+      },
+
+      setItemTimelineSlot: (id, timelineSlot) => {
+        set((s) => {
+          const existing = s.items[id]
+          if (!existing) return s
+          return { items: { ...s.items, [id]: { ...existing, metadata: { ...existing.metadata, timelineSlot } } } }
         })
       },
 

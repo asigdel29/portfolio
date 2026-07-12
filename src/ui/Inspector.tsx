@@ -18,7 +18,10 @@ export function Inspector() {
   const removeRope = useBoardStore((s) => s.removeRope)
   const addItemTag = useBoardStore((s) => s.addItemTag)
   const removeItemTag = useBoardStore((s) => s.removeItemTag)
+  const addItemHypothesis = useBoardStore((s) => s.addItemHypothesis)
+  const removeItemHypothesis = useBoardStore((s) => s.removeItemHypothesis)
   const [tagDraft, setTagDraft] = useState('')
+  const [hypothesisDraft, setHypothesisDraft] = useState('')
 
   if (selectedIds.size !== 1) return null
   const itemId = Array.from(selectedIds)[0]
@@ -144,6 +147,35 @@ export function Inspector() {
             </div>
           )
         })}
+      </div>
+
+      <div>
+        <div style={{ fontSize: 11, letterSpacing: 1, opacity: 0.6, textTransform: 'uppercase', marginBottom: 6 }}>
+          Hypotheses ({item.metadata.hypotheses.length})
+        </div>
+        {item.metadata.hypotheses.length === 0 && (
+          <div style={{ opacity: 0.5, marginBottom: 6 }}>No hypotheses recorded — this slot is where AI-assisted reasoning attaches theories to evidence.</div>
+        )}
+        {item.metadata.hypotheses.map((h) => (
+          <div key={h} style={{ display: 'flex', justifyContent: 'space-between', gap: 6, padding: '4px 0', opacity: 0.9 }}>
+            <span>{h}</span>
+            <button onClick={() => removeItemHypothesis(item.id, h)} style={smallButtonStyle}>
+              ✕
+            </button>
+          </div>
+        ))}
+        <input
+          value={hypothesisDraft}
+          onChange={(e) => setHypothesisDraft(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && hypothesisDraft.trim()) {
+              addItemHypothesis(item.id, hypothesisDraft)
+              setHypothesisDraft('')
+            }
+          }}
+          placeholder="Add a hypothesis, press Enter"
+          style={inputStyle}
+        />
       </div>
 
       {connections.length > 0 && (
